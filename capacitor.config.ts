@@ -1,11 +1,21 @@
-// Capacitor config for the Android build. Install with:
-//   bun add @capacitor/core @capacitor/cli @capacitor/android && bunx cap add android
-// The native "NativeOverlay" plugin (see src/lib/native-overlay-bridge.ts) is developed separately.
-const config = {
+import type { CapacitorConfig } from "@capacitor/cli";
+
+const config: CapacitorConfig = {
   appId: "app.walletart",
   appName: "WalletArt",
   webDir: "dist/client",
-  android: { backgroundColor: "#1c1d22" },
+
+  android: {
+    backgroundColor: "#1c1d22",
+    allowMixedContent: false,
+  },
+
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 1500,
+      backgroundColor: "#1c1d22",
+    },
+  },
 };
 
 export default config;
