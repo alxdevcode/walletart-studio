@@ -1,3 +1,4 @@
+
 name: WalletArt - Build Android APK
 
 on:
@@ -6,7 +7,7 @@ on:
 jobs:
   build-android:
     name: Compila APK Android
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Scarica il codice
@@ -18,8 +19,21 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Installa Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Verifica Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+
+          if [ ! -d "$ANDROID_HOME" ]; then
+            echo "Android SDK non trovato"
+            exit 1
+          fi
+
+          echo "Android SDK trovato"
+
+          ls "$ANDROID_HOME/platforms" || true
+          ls "$ANDROID_HOME/build-tools" || true
 
       - name: Installa Bun
         uses: oven-sh/setup-bun@v2
@@ -35,7 +49,7 @@ jobs:
       - name: Verifica file HTML
         run: |
           test -f .output/public/index.html
-          echo "HTML principale trovato!"
+          echo "HTML principale trovato"
 
       - name: Genera progetto Android
         run: bunx cap add android
