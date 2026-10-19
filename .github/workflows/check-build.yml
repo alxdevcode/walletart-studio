@@ -1,0 +1,69 @@
+
+name: WalletArt - Verifica build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "public/**"
+      - "package.json"
+      - "bun.lock"
+      - "vite.config.ts"
+      - "capacitor.config.ts"
+      - ".github/workflows/check-build.yml"
+
+jobs:
+  check-build:
+    name: Verifica TanStack Start
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scarica il repository
+        uses: actions/checkout@v4
+
+      - name: Installa Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Installa le dipendenze
+        run: bun install
+
+      - name: Compila WalletArt
+        run: bun run build
+
+      - name: Analizza i file generati
+        if: always()
+        shell: bash
+        run: |
+          echo "=== CARTELLE GENERATE ==="
+
+          for dir in dist .output build; do
+            if [ -d "$dir" ]; then
+              echo "Trovata: $dir"
+              find "$dir" -maxdepth 3 -type f | head -60
+            else
+              echo "Assente: $dir"
+            fi
+          done
+
+          echo ""
+          echo "=== INDEX.HTML ==="
+
+          find dist .output build \
+            -name index.html \
+            -type f \
+            -print 2>/dev/null || true
+
+          echo ""
+          echo "=== VERIFICA CAPACITOR ==="
+
+          if [ -f "dist/client/index.html" ]; then
+            echo "OK: dist/client/index.html presente"
+          else
+            echo "ATTENZIONE: dist/client/index.html assente"
+            echo "Serve configurare l'output web per Capacitor."
+          fi
