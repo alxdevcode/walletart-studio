@@ -7,7 +7,7 @@ import { clampCrop, fileToSource, geometry, loadImage, renderCrop, type Crop } f
 import { saveDesign, useAppState } from "@/lib/store";
 
 export const Route = createFileRoute("/editor")({
-  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s.id === "string" ? { id: s.id } : {}),
+  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s["id"] === "string" ? { id: s["id"] } : {}),
   head: () => ({
     meta: [
       { title: "Editor — WalletArt" },

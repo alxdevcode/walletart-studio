@@ -35,7 +35,7 @@ type CapacitorPlugin = Partial<{
 function getPlugin(): CapacitorPlugin | null {
   if (typeof window === "undefined") return null;
   const cap = (window as unknown as { Capacitor?: { Plugins?: Record<string, CapacitorPlugin> } }).Capacitor;
-  return cap?.Plugins?.NativeOverlay ?? null;
+  return cap?.Plugins?.["NativeOverlay"] ?? null;
 }
 
 let webVisible = false;

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/settings")({
   component: Settings,
 });
 
-function Row({ icon, title, desc, right, onClick }: { icon: ReactNode; title: string; desc?: string; right?: ReactNode; onClick?: () => void }) {
+function Row({ icon, title, desc, right, onClick }: { icon: ReactNode; title: string; desc?: string; right?: ReactNode; onClick?: (() => void) | undefined }) {
   const C = onClick ? "button" : "div";
   return (
     <C onClick={onClick} className="flex w-full items-center gap-3 border-b px-4 py-3.5 text-left last:border-b-0">

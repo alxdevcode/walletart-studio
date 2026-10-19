@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export const CARD_RATIO = 85.6 / 53.98;
 
-export function CardPreview({ src, className, label }: { src?: string | null; className?: string; label?: string }) {
+export function CardPreview({ src, className, label }: { src?: string | null | undefined; className?: string | undefined; label?: string | undefined }) {
   return (
     <div
       className={cn("relative w-full overflow-hidden rounded-2xl bg-card-gradient shadow-card card-sheen", className)}
