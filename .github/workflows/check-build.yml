@@ -61,7 +61,8 @@ jobs:
           echo ""
           echo "=== VERIFICA CAPACITOR ==="
 
-          if [ -f "dist/client/index.html" ]; then
+         if [ -f ".output/public/index.html" ]; then
+
             echo "OK: dist/client/index.html presente"
           else
             echo "ATTENZIONE: dist/client/index.html assente"
