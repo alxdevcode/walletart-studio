@@ -1,0 +1,58 @@
+name: WalletArt - Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Compila APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Installa Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Installa Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Installa Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Installa dipendenze
+        run: bun install
+
+      - name: Compila interfaccia WalletArt
+        run: bun run build
+
+      - name: Verifica file HTML
+        run: |
+          test -f .output/public/index.html
+          echo "HTML principale trovato!"
+
+      - name: Genera progetto Android
+        run: bunx cap add android
+
+      - name: Sincronizza Capacitor
+        run: bunx cap sync android
+
+      - name: Compila APK Debug
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Pubblica APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: WalletArt-Android-Debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
