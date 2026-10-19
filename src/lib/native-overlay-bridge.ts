@@ -1,14 +1,17 @@
+import { Capacitor, registerPlugin } from "@capacitor/core";
+
 /**
- * NativeOverlayBridge — contract between the web UI and the Android overlay.
- * The native implementation (Capacitor plugin "NativeOverlay") is developed separately.
- * On the web, a local fallback only tracks UI state: nothing is drawn over other apps.
+ * Collegamento tra l'interfaccia React
+ * e il futuro plugin Android NativeOverlay.
  */
-export type PermissionState = "granted" | "denied" | "unavailable";
+
+export type PermissionState =
+  | "granted"
+  | "denied"
+  | "unavailable";
 
 export interface OverlayConfig {
-  /** PNG/JPEG data URL of the cropped artwork (bank-card ratio 85.6:53.98). */
   imageDataUrl: string;
-  /** 0–1 */
   opacity: number;
   cornerRadius: number;
 }
@@ -24,47 +27,92 @@ export interface NativeOverlayBridge {
 }
 
 type CapacitorPlugin = Partial<{
-  checkPermission(): Promise<{ state: PermissionState }>;
-  requestPermission(): Promise<{ state: PermissionState }>;
-  configure(c: OverlayConfig): Promise<void>;
+  checkPermission(): Promise<{
+    state: PermissionState;
+  }>;
+  requestPermission(): Promise<{
+    state: PermissionState;
+  }>;
+  configure(config: OverlayConfig): Promise<void>;
   show(): Promise<void>;
   hide(): Promise<void>;
-  isVisible(): Promise<{ visible: boolean }>;
+  isVisible(): Promise<{
+    visible: boolean;
+  }>;
 }>;
 
+const nativePlugin =
+  registerPlugin<CapacitorPlugin>("NativeOverlay");
+
 function getPlugin(): CapacitorPlugin | null {
-  if (typeof window === "undefined") return null;
-  const cap = (window as unknown as { Capacitor?: { Plugins?: Record<string, CapacitorPlugin> } }).Capacitor;
-  return cap?.Plugins?.["NativeOverlay"] ?? null;
+  return Capacitor.isNativePlatform()
+    ? nativePlugin
+    : null;
 }
 
 let webVisible = false;
 
 export const overlayBridge: NativeOverlayBridge = {
-  isNativeAvailable: () => !!getPlugin(),
+  isNativeAvailable() {
+    return !!getPlugin();
+  },
+
   async checkPermission() {
-    const p = getPlugin();
-    return p?.checkPermission ? (await p.checkPermission()).state : "unavailable";
+    const plugin = getPlugin();
+
+    return plugin?.checkPermission
+      ? (await plugin.checkPermission()).state
+      : "unavailable";
   },
+
   async requestPermission() {
-    const p = getPlugin();
-    return p?.requestPermission ? (await p.requestPermission()).state : "unavailable";
+    const plugin = getPlugin();
+
+    return plugin?.requestPermission
+      ? (await plugin.requestPermission()).state
+      : "unavailable";
   },
+
   async configure(config) {
-    await getPlugin()?.configure?.(config);
+    const plugin = getPlugin();
+
+    if (!plugin?.configure) {
+      throw new Error(
+        "Plugin Android NativeOverlay non disponibile"
+      );
+    }
+
+    await plugin.configure(config);
   },
+
   async show() {
-    const p = getPlugin();
-    if (p?.show) await p.show();
+    const plugin = getPlugin();
+
+    if (!plugin?.show) {
+      throw new Error(
+        "Plugin Android NativeOverlay non disponibile"
+      );
+    }
+
+    await plugin.show();
     webVisible = true;
   },
+
   async hide() {
-    const p = getPlugin();
-    if (p?.hide) await p.hide();
+    const plugin = getPlugin();
+
+    if (plugin?.hide) {
+      await plugin.hide();
+    }
+
     webVisible = false;
   },
+
   async isVisible() {
-    const p = getPlugin();
-    return p?.isVisible ? (await p.isVisible()).visible : webVisible;
+    const plugin = getPlugin();
+
+    return plugin?.isVisible
+      ? (await plugin.isVisible()).visible
+      : webVisible;
   },
 };
