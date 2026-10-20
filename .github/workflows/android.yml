@@ -1,72 +1,77 @@
-
-name: WalletArt - Build Android APK
+name: Build Android APK
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  build-android:
-    name: Compila APK Android
+  build:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Scarica il codice
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Installa Java 21
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
 
-      - name: Verifica Android SDK
-        shell: bash
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
-          if [ ! -d "$ANDROID_HOME" ]; then
-            echo "Android SDK non trovato"
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build web application
+        run: bun run build
+
+      - name: Create Android project if missing
+        run: |
+          if [ ! -d android ]; then
+            bunx cap add android
+          fi
+
+      - name: Sync Capacitor
+        run: bunx cap sync android
+
+      - name: Update Android app name
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          strings = Path("android/app/src/main/res/values/strings.xml")
+          tree = ET.parse(strings)
+          root = tree.getroot()
+
+          for element in root.findall("string"):
+              if element.get("name") == "app_name":
+                  element.text = "Wallet Demo"
+
+          tree.write(strings, encoding="utf-8", xml_declaration=True)
+          PY
+
+      - name: Generate Android icons
+        run: |
+          if [ -f assets/icon-only.png ]; then
+            bunx @capacitor/assets generate --android
+          else
+            echo "assets/icon-only.png not found"
             exit 1
           fi
 
-          echo "Android SDK trovato"
-
-          ls "$ANDROID_HOME/platforms" || true
-          ls "$ANDROID_HOME/build-tools" || true
-
-      - name: Installa Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Installa dipendenze
-        run: bun install
-
-      - name: Compila interfaccia WalletArt
-        run: bun run build
-
-      - name: Verifica file HTML
-        run: |
-          test -f .output/public/index.html
-          echo "HTML principale trovato"
-
-      - name: Genera progetto Android
-        run: bunx cap add android
-
-      - name: Sincronizza Capacitor
-        run: bunx cap sync android
-
-      - name: Compila APK Debug
+      - name: Build debug APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug
 
-      - name: Pubblica APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: WalletArt-Android-Debug
+          name: wallet-demo-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
