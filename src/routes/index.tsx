@@ -20,6 +20,8 @@ type CardDetails = {
   memberSince: string;
 };
 
+type PanelPage = "menu" | "themes" | "details";
+
 const STORAGE_KEY = "walletart-card-details-v1";
 
 const defaultDetails: CardDetails = {
@@ -59,13 +61,19 @@ function WalletHome() {
   const { designs, activeId } = useAppState();
 
   const [showMore, setShowMore] = useState(false);
-  const [page, setPage] = useState<"menu" | "themes" | "details">("menu");
+  const [page, setPage] = useState<PanelPage>("menu");
 
-  const [details, setDetails] = useState<CardDetails>(defaultDetails);
-  const [draft, setDraft] = useState<CardDetails>(defaultDetails);
+  const [details, setDetails] =
+    useState<CardDetails>(defaultDetails);
+
+  const [draft, setDraft] =
+    useState<CardDetails>(defaultDetails);
+
   const [loaded, setLoaded] = useState(false);
 
-  const active = designs.find((d) => d.id === activeId);
+  const active = designs.find(
+    (design) => design.id === activeId
+  );
 
   useEffect(() => {
     try {
@@ -73,19 +81,26 @@ function WalletHome() {
 
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<CardDetails>;
-        const next = { ...defaultDetails, ...parsed };
+
+        const next = {
+          ...defaultDetails,
+          ...parsed,
+        };
 
         setDetails(next);
         setDraft(next);
       }
     } catch (error) {
-      console.warn("Impossibile leggere i dettagli carta", error);
+      console.warn(
+        "Impossibile leggere i dettagli della carta",
+        error
+      );
     } finally {
       setLoaded(true);
     }
   }, []);
 
-  function openPanel(nextPage: "menu" | "themes" | "details") {
+  function openPanel(nextPage: PanelPage) {
     setPage(nextPage);
     setDraft(details);
     setShowMore(true);
@@ -96,31 +111,56 @@ function WalletHome() {
       holder: draft.holder.trim().slice(0, 50),
       issuer: draft.issuer.trim().slice(0, 50),
       network: draft.network.trim().slice(0, 40),
-      lastFour: draft.lastFour.replace(/\D/g, "").slice(0, 4),
-      memberSince: draft.memberSince.replace(/\D/g, "").slice(0, 4),
+      lastFour: draft.lastFour
+        .replace(/\D/g, "")
+        .slice(0, 4),
+      memberSince: draft.memberSince
+        .replace(/\D/g, "")
+        .slice(0, 4),
     };
 
-    if (cleaned.lastFour && cleaned.lastFour.length !== 4) {
-      alert("Inserisci esattamente 4 cifre oppure lascia il campo vuoto.");
+    if (
+      cleaned.lastFour &&
+      cleaned.lastFour.length !== 4
+    ) {
+      alert(
+        "Inserisci esattamente 4 cifre oppure lascia il campo vuoto."
+      );
+      return;
+    }
+
+    if (
+      cleaned.memberSince &&
+      cleaned.memberSince.length !== 4
+    ) {
+      alert(
+        "Inserisci un anno di quattro cifre oppure lascia il campo vuoto."
+      );
       return;
     }
 
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(cleaned)
+      );
+
       setDetails(cleaned);
       setDraft(cleaned);
       setPage("menu");
     } catch {
-      alert("Non è stato possibile salvare i dati sul dispositivo.");
+      alert(
+        "Non è stato possibile salvare i dati sul dispositivo."
+      );
     }
   }
 
   return (
     <main
       className="fixed inset-0 z-50 flex flex-col overflow-hidden text-white"
-      style={{ background: "#1c1d22" }}
+      style={{ backgroundColor: "#1c1d22" }}
     >
-      {/* Logo e profilo */}
+      {/* INTESTAZIONE */}
       <header className="flex items-center justify-between px-5 pt-5">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#303238]">
           <img
@@ -128,53 +168,69 @@ function WalletHome() {
             alt="Logo Wallet"
             className="h-9 w-9 object-contain"
           />
-        
-<div
-  className="relative w-full overflow-hidden rounded-[20px] bg-black shadow-xl"
-  style={{ aspectRatio: "1.586" }}
->
-  {active?.rendered ? (
-    <>
-      <img
-        src={active.rendered}
-        alt="Grafica della carta personalizzata"
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-
-      {/* Dati sovrapposti soltanto nella Home */}
-      <div
-        className="pointer-events-none absolute bottom-[9%] left-[5%] max-w-[55%] truncate text-white"
-        style={{
-          fontSize: "clamp(14px, 4.5vw, 30px)",
-          fontWeight: 400,
-          textShadow: "0 1px 3px rgba(0,0,0,0.6)",
-        }}
-      >
-        {details.holder || "Alex"}
-      </div>
-
-      {details.memberSince && (
-        <div
-          className="pointer-events-none absolute bottom-[9%] right-[13%] text-white"
-          style={{
-            fontSize: "clamp(14px, 4.5vw, 30px)",
-            fontWeight: 400,
-            textShadow: "0 1px 3px rgba(0,0,0,0.6)",
-          }}
-        >
-          {details.memberSince}
         </div>
-      )}
-    </>
-  ) : (
-    <div className="flex h-full flex-col items-center justify-center gap-3">
-      <CreditCard size={42} />
-      <span>Nessuna grafica selezionata</span>
-    </div>
-  )}
-</div>
 
+        <img
+          src="/profile.jpg"
+          alt="Foto profilo"
+          className="h-14 w-14 rounded-full object-cover"
+        />
+      </header>
 
+      {/* CARTA PRINCIPALE */}
+      <section className="mt-24 px-5">
+        <div
+          className="relative w-full overflow-hidden rounded-[20px] bg-black shadow-xl"
+          style={{ aspectRatio: "1.586" }}
+        >
+          {active?.rendered ? (
+            <>
+              <img
+                src={active.rendered}
+                alt="Grafica della carta personalizzata"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+
+              {/* Nome direttamente sulla carta */}
+              <div
+                className="pointer-events-none absolute bottom-[9%] left-[5%] max-w-[55%] truncate text-white"
+                style={{
+                  fontSize: "clamp(14px, 4.5vw, 30px)",
+                  fontWeight: 400,
+                  textShadow:
+                    "0 1px 3px rgba(0,0,0,0.6)",
+                }}
+              >
+                {loaded ? details.holder || "Alex" : "Alex"}
+              </div>
+
+              {/* Anno sotto MEMBER SINCE */}
+              {loaded && details.memberSince && (
+                <div
+                  className="pointer-events-none absolute bottom-[9%] right-[13%] text-white"
+                  style={{
+                    fontSize: "clamp(14px, 4.5vw, 30px)",
+                    fontWeight: 400,
+                    textShadow:
+                      "0 1px 3px rgba(0,0,0,0.6)",
+                  }}
+                >
+                  {details.memberSince}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-3">
+              <CreditCard size={42} />
+
+              <span>
+                Nessuna grafica selezionata
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Nome e ultime cifre sotto la carta */}
         <div className="mt-5 text-center">
           <p className="text-xl font-medium">
             {loaded ? details.holder || "Titolare" : "Alex"}
@@ -187,7 +243,7 @@ function WalletHome() {
           )}
         </div>
 
-        {/* Indicatore solo estetico */}
+        {/* INDICATORE GRAFICO CONTACTLESS */}
         <div className="mt-6 flex justify-center">
           <div
             className="inline-flex items-center justify-center gap-3 rounded-full bg-[#41434d] px-6 py-3.5 text-[#b8cbff]"
@@ -204,7 +260,7 @@ function WalletHome() {
 
       <div className="flex-1" />
 
-      {/* Pulsanti inferiori */}
+      {/* PULSANTI INFERIORI */}
       <div className="mb-12 flex justify-center px-5">
         <div className="flex h-[68px] gap-1">
           <button
@@ -218,7 +274,7 @@ function WalletHome() {
           <Link
             to="/editor"
             search={{}}
-            aria-label="Crea una grafica"
+            aria-label="Crea una nuova grafica"
             className="flex w-[76px] items-center justify-center rounded-l-md rounded-r-full bg-[#38393f] text-[#b8cbff]"
           >
             <Plus size={34} />
@@ -226,7 +282,7 @@ function WalletHome() {
         </div>
       </div>
 
-      {/* Pannello inferiore */}
+      {/* PANNELLO MOSTRA ALTRO */}
       {showMore && (
         <div className="absolute inset-0 z-50 flex items-end bg-black/65">
           <div className="max-h-[82dvh] w-full overflow-y-auto rounded-t-[28px] bg-[#292a30] px-5 pb-10 pt-5">
@@ -262,6 +318,7 @@ function WalletHome() {
               </button>
             </div>
 
+            {/* MENU */}
             {page === "menu" && (
               <div className="space-y-3">
                 <button
@@ -269,9 +326,16 @@ function WalletHome() {
                   onClick={() => setPage("themes")}
                   className="flex w-full items-center gap-4 rounded-2xl bg-white/5 p-5 text-left"
                 >
-                  <Palette className="text-[#b8cbff]" size={24} />
+                  <Palette
+                    className="text-[#b8cbff]"
+                    size={24}
+                  />
+
                   <div>
-                    <p className="font-semibold">Cambia tema</p>
+                    <p className="font-semibold">
+                      Cambia tema
+                    </p>
+
                     <p className="mt-1 text-sm text-white/50">
                       Scegli una grafica salvata
                     </p>
@@ -286,11 +350,18 @@ function WalletHome() {
                   }}
                   className="flex w-full items-center gap-4 rounded-2xl bg-white/5 p-5 text-left"
                 >
-                  <CreditCard className="text-[#b8cbff]" size={24} />
+                  <CreditCard
+                    className="text-[#b8cbff]"
+                    size={24}
+                  />
+
                   <div>
-                    <p className="font-semibold">Dettagli carta</p>
+                    <p className="font-semibold">
+                      Dettagli carta
+                    </p>
+
                     <p className="mt-1 text-sm text-white/50">
-                      Titolare, circuito e ultime quattro cifre
+                      Nome, circuito e ultime quattro cifre
                     </p>
                   </div>
                 </button>
@@ -300,17 +371,25 @@ function WalletHome() {
                   search={active ? { id: active.id } : {}}
                   className="flex items-center gap-4 rounded-2xl bg-white/5 p-5"
                 >
-                  <Pencil className="text-[#b8cbff]" size={24} />
+                  <Pencil
+                    className="text-[#b8cbff]"
+                    size={24}
+                  />
+
                   <div>
-                    <p className="font-semibold">Modifica grafica</p>
+                    <p className="font-semibold">
+                      Modifica grafica
+                    </p>
+
                     <p className="mt-1 text-sm text-white/50">
-                      Personalizza la carta nell'editor
+                      Apri l'editor della carta
                     </p>
                   </div>
                 </Link>
               </div>
             )}
 
+            {/* TEMI */}
             {page === "themes" && (
               <>
                 {designs.length === 0 ? (
@@ -320,14 +399,18 @@ function WalletHome() {
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     {designs.map((design) => {
-                      const selected = design.id === activeId;
+                      const selected =
+                        design.id === activeId;
 
                       return (
                         <button
                           key={design.id}
                           type="button"
                           onClick={() => {
-                            setState({ activeId: design.id });
+                            setState({
+                              activeId: design.id,
+                            });
+
                             setShowMore(false);
                           }}
                           className="text-left"
@@ -338,7 +421,9 @@ function WalletHome() {
                                 ? "border-[#a8c7fa]"
                                 : "border-transparent"
                             }`}
-                            style={{ aspectRatio: "1.586" }}
+                            style={{
+                              aspectRatio: "1.586",
+                            }}
                           >
                             <img
                               src={design.rendered}
@@ -373,12 +458,13 @@ function WalletHome() {
               </>
             )}
 
+            {/* DETTAGLI CARTA */}
             {page === "details" && (
               <div className="space-y-5">
                 <p className="text-sm leading-relaxed text-white/60">
-                  Salva soltanto informazioni descrittive.
-                  Non inserire il numero completo della carta,
-                  il CVV, il PIN o codici di verifica.
+                  Inserisci soltanto dati descrittivi.
+                  Non inserire numero completo, CVV,
+                  PIN o codici OTP.
                 </p>
 
                 <div className="space-y-4">
@@ -386,6 +472,7 @@ function WalletHome() {
                     <span className="mb-2 block text-sm text-white/70">
                       Nome del titolare
                     </span>
+
                     <input
                       type="text"
                       maxLength={50}
@@ -397,7 +484,7 @@ function WalletHome() {
                         })
                       }
                       className="w-full rounded-xl border border-white/10 bg-[#393b44] p-4 text-white outline-none focus:border-[#a8c7fa]"
-                      placeholder="Alex"
+                      placeholder="Alessandro"
                     />
                   </label>
 
@@ -405,6 +492,7 @@ function WalletHome() {
                     <span className="mb-2 block text-sm text-white/70">
                       Banca o emittente
                     </span>
+
                     <input
                       type="text"
                       maxLength={50}
@@ -424,6 +512,7 @@ function WalletHome() {
                     <span className="mb-2 block text-sm text-white/70">
                       Circuito
                     </span>
+
                     <select
                       value={draft.network}
                       onChange={(e) =>
@@ -445,6 +534,7 @@ function WalletHome() {
                     <span className="mb-2 block text-sm text-white/70">
                       Ultime 4 cifre
                     </span>
+
                     <input
                       type="text"
                       inputMode="numeric"
@@ -466,8 +556,9 @@ function WalletHome() {
 
                   <label className="block">
                     <span className="mb-2 block text-sm text-white/70">
-                      Member Since (anno, facoltativo)
+                      Member Since (anno)
                     </span>
+
                     <input
                       type="text"
                       inputMode="numeric"
@@ -483,7 +574,7 @@ function WalletHome() {
                         })
                       }
                       className="w-full rounded-xl border border-white/10 bg-[#393b44] p-4 text-white outline-none focus:border-[#a8c7fa]"
-                      placeholder="2024"
+                      placeholder="2026"
                     />
                   </label>
                 </div>
@@ -500,7 +591,7 @@ function WalletHome() {
             )}
 
             <p className="mt-7 text-center text-xs text-white/40">
-              Demo grafica · Nessuna funzione di pagamento NFC
+              Anteprima grafica · Pagamenti NFC non disponibili
             </p>
           </div>
         </div>
