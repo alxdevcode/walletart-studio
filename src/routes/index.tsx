@@ -128,34 +128,52 @@ function WalletHome() {
             alt="Logo Wallet"
             className="h-9 w-9 object-contain"
           />
-        </div>
+        
+<div
+  className="relative w-full overflow-hidden rounded-[20px] bg-black shadow-xl"
+  style={{ aspectRatio: "1.586" }}
+>
+  {active?.rendered ? (
+    <>
+      <img
+        src={active.rendered}
+        alt="Grafica della carta personalizzata"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
 
-        <img
-          src="/profile.jpg"
-          alt="Foto profilo"
-          className="h-14 w-14 rounded-full object-cover"
-        />
-      </header>
+      {/* Dati sovrapposti soltanto nella Home */}
+      <div
+        className="pointer-events-none absolute bottom-[9%] left-[5%] max-w-[55%] truncate text-white"
+        style={{
+          fontSize: "clamp(14px, 4.5vw, 30px)",
+          fontWeight: 400,
+          textShadow: "0 1px 3px rgba(0,0,0,0.6)",
+        }}
+      >
+        {details.holder || "Alex"}
+      </div>
 
-      {/* Carta principale */}
-      <section className="mt-24 px-5">
+      {details.memberSince && (
         <div
-          className="relative w-full overflow-hidden rounded-[20px] bg-black shadow-xl"
-          style={{ aspectRatio: "1.586" }}
+          className="pointer-events-none absolute bottom-[9%] right-[13%] text-white"
+          style={{
+            fontSize: "clamp(14px, 4.5vw, 30px)",
+            fontWeight: 400,
+            textShadow: "0 1px 3px rgba(0,0,0,0.6)",
+          }}
         >
-          {active?.rendered ? (
-            <img
-              src={active.rendered}
-              alt="Grafica della carta personalizzata"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-3">
-              <CreditCard size={42} />
-              <span>Nessuna grafica selezionata</span>
-            </div>
-          )}
+          {details.memberSince}
         </div>
+      )}
+    </>
+  ) : (
+    <div className="flex h-full flex-col items-center justify-center gap-3">
+      <CreditCard size={42} />
+      <span>Nessuna grafica selezionata</span>
+    </div>
+  )}
+</div>
+
 
         <div className="mt-5 text-center">
           <p className="text-xl font-medium">
